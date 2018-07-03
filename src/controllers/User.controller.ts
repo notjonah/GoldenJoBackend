@@ -1,34 +1,31 @@
-import { get, param } from "@loopback/rest";
-import { User } from "../models/User";
-import { repository } from "@loopback/repository";
-import { UserRepository } from "../repositories/User.repository";
-
-// Uncomment these imports to begin using these cool features!
-
-// import {inject} from '@loopback/context';
-
+import { repository } from '@loopback/repository';
+import { UserRepository } from '../repositories/User.repository';
+import { User } from '../models/user.model';
+import {
+  HttpErrors,
+  get,
+  param,
+} from '@loopback/rest';
 
 export class UserController {
-
   constructor(
-    @repository(UserRepository.name) private UserRepo: UserRepository
+    @repository(UserRepository) protected userRepo: UserRepository,
   ) { }
 
-  @get("/users")
-  async getAllUsers(): Promise<Array<User>> {
-    return await this.UserRepo.find();
+  @get('/users')
+  async findUsers(): Promise<User[]> {
+    return await this.userRepo.find();
   }
 
-  @get("/Users/{id}")
-  async getOneUser(
-    @param.query.string("id") id: string): Promise<User[]> {
-    return await this.UserRepo.find({
-      where: {
-        userId: id
-      }
-    });
+  @get('/users/{id}')
+  async findUsersById(@param.path.number('id') id: number): Promise<User> {
+    // Check for valid ID
+    let userExists: boolean = !!(await this.userRepo.count({ id }));
+
+    if (!userExists) {
+      throw new HttpErrors.BadRequest(`user ID ${id} does not exist`);
+    }
+
+    return await this.userRepo.findById(id);
   }
-}
-
-
 

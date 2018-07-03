@@ -1,2 +1,2 @@
 export * from './ping.controller';
-export * from './Registration.controller';
+export * from './registration.controller';
