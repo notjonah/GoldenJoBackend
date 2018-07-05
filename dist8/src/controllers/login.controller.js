@@ -16,33 +16,45 @@ const repository_1 = require("@loopback/repository");
 const User_repository_1 = require("../repositories/User.repository");
 const models_1 = require("../models");
 const rest_1 = require("@loopback/rest");
-let RegistrationController = class RegistrationController {
+let LoginController = class LoginController {
     constructor(userRepo) {
         this.userRepo = userRepo;
     }
-    async registerUser(user) {
-        // Check that required fields are supplied
+    async loginUser(user) {
+        // Check that email and password are both supplied
         if (!user.email || !user.password) {
-            throw new rest_1.HttpErrors.BadRequest('missing data');
+            throw new rest_1.HttpErrors.Unauthorized('invalid credentials');
         }
-        // Check that user does not already exist
-        let userExists = !!(await this.userRepo.count({ email: user.email }));
-        if (userExists) {
-            throw new rest_1.HttpErrors.BadRequest('user already exists');
+        // Check that email and password are valid
+        let userExists = !!(await this.userRepo.count({
+            and: [
+                { email: user.email },
+                { password: user.password },
+            ],
+        }));
+        if (!userExists) {
+            throw new rest_1.HttpErrors.Unauthorized('invalid credentials');
         }
-        return await this.userRepo.create(user);
+        return await this.userRepo.findOne({
+            where: {
+                and: [
+                    { email: user.email },
+                    { password: user.password }
+                ],
+            },
+        });
     }
 };
 __decorate([
-    rest_1.post('/registration'),
+    rest_1.post('/login'),
     __param(0, rest_1.requestBody()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [models_1.User]),
     __metadata("design:returntype", Promise)
-], RegistrationController.prototype, "registerUser", null);
-RegistrationController = __decorate([
+], LoginController.prototype, "loginUser", null);
+LoginController = __decorate([
     __param(0, repository_1.repository(User_repository_1.UserRepository)),
     __metadata("design:paramtypes", [User_repository_1.UserRepository])
-], RegistrationController);
-exports.RegistrationController = RegistrationController;
-//# sourceMappingURL=registration.controller.js.map
+], LoginController);
+exports.LoginController = LoginController;
+//# sourceMappingURL=login.controller.js.map
